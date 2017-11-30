@@ -97,10 +97,14 @@ u32 dev_detect_fun(u32 info)
 #if SD_DADA_MULT
 	sd_data_multiplex();
 #endif
-	
-#if AUX_DETECT_EN
+
+#ifdef AUX_CHECK_ENABLE
     aux_check_api(info); //linein¼ì²â
 #endif
+
+#ifdef PH_CHECK_ENABLE
+    ph_check_api(info);
+#endif // PH_CHECK_ENABLE
 
 #if(BT_MODE==NORMAL_MODE)
 #if USB_PC_EN

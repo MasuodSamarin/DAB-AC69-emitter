@@ -109,7 +109,7 @@ void set_g_sys_cfg(FLASH_SYS_CFG *sys_cfg,u32 cfg_addr)
     app_use_flash_cfg.cfg_zone_addr = sys_cfg->flash_cfg.cfg_zone_addr;
     app_use_flash_cfg.flash_size = sys_cfg->flash_cfg.flash_size;
     app_use_flash_cfg.cfg_zone_size = sys_cfg->flash_cfg.cfg_zone_size;
-   
+
     printf("cfg_zone_addr =%08x \n",app_use_flash_cfg.cfg_zone_addr);
     printf("cfg_zone_size =%08x \n",app_use_flash_cfg.cfg_zone_size);
 
@@ -145,7 +145,7 @@ void set_g_sys_cfg(FLASH_SYS_CFG *sys_cfg,u32 cfg_addr)
 			printf("USER_len =%08x \n",*tmp);
 		}
         cfg_ptr+=16;
-    } 
+    }
 
 #if 0
     printf("flash_id : %x\n",   sys_cfg->flash_cfg.flash_id);
@@ -189,19 +189,19 @@ void wake_io_check(void)
 
     if(reg & BIT(0))
     {
-		puts("-WK_PR0\n");        
+		puts("-WK_PR0\n");
     }
     else if(reg & BIT(1))
     {
-		puts("-WK_PR1\n");       
+		puts("-WK_PR1\n");
     }
     else if(reg & BIT(2))
     {
-		puts("-WK_PR2\n");  
+		puts("-WK_PR2\n");
     }
     else if(reg & BIT(3))
     {
-		puts("-WK_PR3\n");  
+		puts("-WK_PR3\n");
     }
 }
 
@@ -252,7 +252,7 @@ void mcpwm_test()
 extern void power_init(u8 mode);
 extern void set_poweroff_wakeup_io();
 extern void set_poweroff_wakeup_io_handle_register(void (*handle)(),void (*sleep_io_handle)(),void (*sleep_handle)());
-extern void ldo5v_detect_deal(u8 mode); 
+extern void ldo5v_detect_deal(u8 mode);
 extern void set_vddio_level(u8 level);
 extern void low_power_mode(u16 wakeup_cfg , u8 wakeup_edge);
 extern void set_sleep_mode_wakeup_io();
@@ -277,14 +277,14 @@ void  board_main(u32 cfg_addr, u32 addr, u32 res,u32 update_flag)
     /* printf("lsb_clk_hz= %u HZ\n", clock_get_lsb_freq()); */
 
 	puts("\n\n***************************AC69_Emitter_v104**********************************\n");
- 
+
 	//查看哪个PR口唤醒softpoweroff
 	wake_io_check();
 
     u8 *protect_info;
     protect_info=(u8 *)0x40000;
     printf_buf(protect_info,32);
-    printf("--JL_POWER->CON-- : 0x%x\n", JL_POWER->CON>>5);//0:PWR_ON 1:LVD 2:WDT 3:SRST 4:POWEROFF 
+    printf("--JL_POWER->CON-- : 0x%x\n", JL_POWER->CON>>5);//0:PWR_ON 1:LVD 2:WDT 3:SRST 4:POWEROFF
 
     set_g_sys_cfg(&sys_cfg, cfg_addr);
 
@@ -292,7 +292,7 @@ void  board_main(u32 cfg_addr, u32 addr, u32 res,u32 update_flag)
 	printf("ie0 =%08x \n",tmp);
 	__asm__ volatile ("mov %0,icfg" : "=r"(tmp));
 	printf("icfg =%08x \n",tmp);
-	
+
 	/* printf("syd_cfg_addr=0x%x\n", cfg_addr); */
     set_sydf_header_base(sys_cfg.flash_cfg.sdfile_head_addr);
 
@@ -302,7 +302,7 @@ void  board_main(u32 cfg_addr, u32 addr, u32 res,u32 update_flag)
 	{
 		while(1)
 		{
-		   puts("vm_init_api err\n");	
+		   puts("vm_init_api err\n");
 		}
 	}
 
@@ -317,8 +317,8 @@ void  board_main(u32 cfg_addr, u32 addr, u32 res,u32 update_flag)
 
 	/* 系统时钟大于160M要设置成1.2V */
 #if (SYS_Hz > 160000000L)
-	SFR(JL_SYSTEM->LDO_CON, 12, 3, 0b011);     // 1.5 -> 1.2 DVDD set to 1.2v 
-	SFR(JL_SYSTEM->LDO_CON, 21, 3, 0b011);     // 1.5 -> 1.2 DVDDA set to 1.2v 
+	SFR(JL_SYSTEM->LDO_CON, 12, 3, 0b011);     // 1.5 -> 1.2 DVDD set to 1.2v
+	SFR(JL_SYSTEM->LDO_CON, 21, 3, 0b011);     // 1.5 -> 1.2 DVDDA set to 1.2v
 #endif
 
 #if 0    //设置打印PA3
@@ -332,11 +332,11 @@ void  board_main(u32 cfg_addr, u32 addr, u32 res,u32 update_flag)
 	/* USB_DM_DIR(0); */
 #endif
 
-	set_poweroff_wakeup_io_handle_register(set_poweroff_wakeup_io,set_sleep_mode_wakeup_io,set_sleep_before_close_irq); 
+	set_poweroff_wakeup_io_handle_register(set_poweroff_wakeup_io,set_sleep_mode_wakeup_io,set_sleep_before_close_irq);
 
 	if(device_is_first_start()||device_is_updata_over())
 	{
-		puts("device first_start or updata_over\n");	
+		puts("device first_start or updata_over\n");
 	}
 	else
 	{
@@ -346,6 +346,23 @@ void  board_main(u32 cfg_addr, u32 addr, u32 res,u32 update_flag)
 	irq_handler_register(0,exception_isr,0);
     timer0_init();
     sys_init();
+
+    {
+        JL_PORTB->DIR |=  (BIT(5)|BIT(6));
+        JL_PORTB->PU  &= ~(BIT(5)|BIT(6));
+        JL_PORTB->PD  &= ~(BIT(5)|BIT(6));
+
+        JL_PORTB->DIR &= ~(BIT(0));
+        JL_PORTB->DIR |=  (BIT(1));
+        JL_PORTB->PU  &= ~(BIT(0)|BIT(1));
+        JL_PORTB->PD  &= ~(BIT(0)|BIT(1));
+
+        JL_PORTB->PU  |=  (BIT(0)|BIT(1));
+//        JL_PORTB->DIE &= ~BIT(0);
+
+        extern void user_uart_init();
+        user_uart_init();
+    }
 
 	/* enter_sleep_mode(); */
 

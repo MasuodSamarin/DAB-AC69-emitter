@@ -35,7 +35,8 @@ RECORD_OP_API * aux_rec = NULL;
 REVERB_API_STRUCT *aux_reverb = NULL;
 #define get_mute_status   is_dac_mute
 
-
+extern u8 get_aux_channel();
+static u8 last_aux_channel;
 /*----------------------------------------------------------------------------*/
 /**@brief  AUX DAC通道选择，开启
  @param  无
@@ -45,31 +46,36 @@ REVERB_API_STRUCT *aux_reverb = NULL;
 /*----------------------------------------------------------------------------*/
 void aux_dac_channel_on(void)
 {
-	if(LINEIN_CHANNEL == DAC_AMUX0) {
+    last_aux_channel = get_aux_channel();
+	if(get_aux_channel() == DAC_AMUX0) {     ///LINEIN_CHANNEL
     	JL_PORTA->DIR |=  (BIT(1)|BIT(2));
     	JL_PORTA->DIE &= ~(BIT(1)|BIT(2));
 	}
-	else if(LINEIN_CHANNEL == DAC_AMUX1) {
+	else if(get_aux_channel() == DAC_AMUX1) {    ///LINEIN_CHANNEL
     	JL_PORTA->DIR |=  (BIT(4)|BIT(3));
     	JL_PORTA->DIE &= ~(BIT(4)|BIT(3));
-		JL_PORTA->PD  &= ~(BIT(3));//PA3 default pull_down 
+		JL_PORTA->PD  &= ~(BIT(3));//PA3 default pull_down
 	}
-	else if(LINEIN_CHANNEL == DAC_AMUX2) {
+	else if(get_aux_channel() == DAC_AMUX2) {    ///LINEIN_CHANNEL
     	JL_PORTB->DIR |=  (BIT(11)|BIT(12));
     	JL_PORTB->DIE &= ~(BIT(11)|BIT(12));
-	} 
+	}
 
 #if AUX_AD_ENABLE
     dac_channel_on(MUSIC_CHANNEL, FADE_ON);
 	set_sys_vol(0,0,FADE_ON);
     dac_set_samplerate(48000,0);
     ladc_reg_init(ENC_LINE_LR_CHANNEL , LADC_SR48000);
-	amux_channel_en(LINEIN_CHANNEL,1);
+	amux_channel_en(get_aux_channel(),1);///LINEIN_CHANNEL
 	os_time_dly(35);
 	set_sys_vol(dac_ctl.sys_vol_l,dac_ctl.sys_vol_r,FADE_ON);
 #else
-    dac_channel_on(LINEIN_CHANNEL, FADE_ON);
-    os_time_dly(20);//wait amux channel capacitance charge ok
+	set_sys_vol(0,0,FADE_ON);
+    os_time_dly(10);//wait amux channel capacitance charge ok
+    dac_channel_on(get_aux_channel(), FADE_ON);///LINEIN_CHANNEL
+    dac_AmuxGain_en(1);
+    os_time_dly(150);//wait amux channel capacitance charge ok
+    dac_mute(1, 1);
 	set_sys_vol(dac_ctl.sys_vol_l,dac_ctl.sys_vol_r,FADE_ON);
 	#if ECHO_EN
 	///开启dac数字通道
@@ -80,6 +86,14 @@ void aux_dac_channel_on(void)
 	dac_trim_en(1);
 	dac_digital_en(0);
 	#endif//end of ECHO_EN
+    extern u8 MCU_mute_flag;
+    if(MCU_mute_flag){
+        set_sys_vol(0,0,FADE_ON);
+        dac_mute(1, 1);
+    }else{
+        os_time_dly(20);
+        dac_mute(0, 1);
+    }
 #endif//end of AUX_AD_ENABLE
 }
 
@@ -95,9 +109,9 @@ void aux_dac_channel_off(void)
 #if AUX_AD_ENABLE
 	dac_channel_off(MUSIC_CHANNEL,FADE_ON);
 	ladc_close(ENC_LINE_LR_CHANNEL);
-	amux_channel_en(LINEIN_CHANNEL,0);
+	amux_channel_en(last_aux_channel,0);///LINEIN_CHANNEL
 #else
-    dac_channel_off(LINEIN_CHANNEL, FADE_ON);
+    dac_channel_off(last_aux_channel, FADE_ON);///LINEIN_CHANNEL
 	dac_trim_en(0);
 	/* dac_mute(0, 1); */
 #endif
@@ -126,14 +140,21 @@ static void linein_task(void *p)
 {
     int msg[6];
     aux_reverb = NULL;
-    tbool psel_enable;
+    tbool psel_enable = 0;
 	u8 line_do_mute_flag = 0;
 
     aux_puts("\n************************LINEIN TASK********************\n");
     malloc_stats();
     led_fre_set(15,0);
 
-    psel_enable = tone_play_by_name(LINEIN_TASK_NAME,1, BPF_LINEIN_MP3); //line in提示音播放
+    extern u8 MCU_mute_flag;
+    if(MCU_mute_flag){
+        set_sys_vol(0,0,FADE_ON);
+    }else{
+        set_sys_vol(dac_ctl.sys_vol_l, dac_ctl.sys_vol_r, FADE_ON);
+    }
+//    psel_enable = tone_play_by_name(LINEIN_TASK_NAME,1, BPF_LINEIN_MP3); //line in提示音播放
+    os_taskq_post_msg(LINEIN_TASK_NAME, 1, SYS_EVENT_PLAY_SEL_END); //触发idle模块初始化
 
 #if (AUX_AD_ENABLE && EQ_EN)
 	eq_enable();
@@ -223,7 +244,7 @@ static void linein_task(void *p)
 	                dac_mute(1, 1);
 	                led_fre_set(0,0);
 	            }
-				line_do_mute_flag = 1; 
+				line_do_mute_flag = 1;
                 UI_menu(MENU_REFRESH);
             	break;
 
@@ -251,6 +272,9 @@ static void linein_task(void *p)
 
             case MSG_HALF_SECOND:
 	            //aux_puts(" Aux_H ");
+//                if(!MCU_mute_flag){
+//                    set_sys_vol(dac_ctl.sys_vol_l, dac_ctl.sys_vol_r, FADE_ON);
+//                }
 #if AUX_REC_EN
 	            if(updata_enc_time(aux_rec))
 	            {

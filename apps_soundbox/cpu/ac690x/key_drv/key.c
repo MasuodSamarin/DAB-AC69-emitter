@@ -92,7 +92,7 @@ void key_msg_sender(char *name, u32 msg)
 {
 	u32 cnt = 0;
 	os_taskq_count(name, &cnt);
-	printf("msg_task:%s,msg_cnt:%d\n",name,cnt);
+//	printf("msg_task:%s,msg_cnt:%d\n",name,cnt);
 	if(cnt > 8)
 	{
 		os_taskq_post_msg(name,1,msg);

@@ -33,4 +33,6 @@ void microphone_open(u8 mic_gain,u8 mic_gx2);
 void microphone_close(void);
 void emitter_aux_open();
 void emitter_aux_close();
+void emitter_aux_set_channel(u8 channel_idx);
+
 #endif

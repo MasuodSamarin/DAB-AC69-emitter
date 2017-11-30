@@ -14,7 +14,7 @@
     #define aux_printf(...)
 #endif
 
-#define AUX_DETECT_EN       1
+#define AUX_DETECT_EN       0
 #define LINEIN_TASK_NAME   "LineinTask"
 #define AUX_AD_ENABLE		0
 

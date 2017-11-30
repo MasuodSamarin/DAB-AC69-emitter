@@ -172,8 +172,8 @@ void ladc_one_to_two(u16 *dest_buf,u16 *buf,u16 point_cnt)
 /*
  *********************************************************************************************************
  *
- * Description: ladc dual channel,combine ladc channel buf 
- * Arguments  : ladc_l = left adc channel buf 
+ * Description: ladc dual channel,combine ladc channel buf
+ * Arguments  : ladc_l = left adc channel buf
  *				ladc_r = right adc channel buf
  * Returns    : none
  *
@@ -193,8 +193,8 @@ void ladc_stereo(s16 *ladc_l,s16 *ladc_r,u16 point_cnt,s16 *dest_buf)
 /*
  *********************************************************************************************************
  *
- * Description: calculate data energy  
- * Arguments  : buffer = source_data  
+ * Description: calculate data energy
+ * Arguments  : buffer = source_data
  *				len = data length(byte)
  *				packet_cnt = total calculate packets
  * Returns    : none
@@ -381,19 +381,31 @@ void ladc_isr_callback(void *ladc_buf,u32 buf_flag,u32 buf_len)
 	ladc_r = res + DAC_DUAL_BUF_LEN;
 	ladc_mic = res + (2*DAC_DUAL_BUF_LEN);
 
+    extern u8 switch_aux_channel_flag ;
+    extern u8 clear_aux_plosive_flag ;
+    if(switch_aux_channel_flag || clear_aux_plosive_flag)
+    {
+        putchar('l');
+        for(i=0;i<DAC_SAMPLE_POINT;i++)
+        {
+            ladc_l[i] = 0;
+            ladc_r[i] = 0;
+        }
+    }
+
 #ifdef LADC_AUX_AND_MIC
 	s32 tmp_l,tmp_r;
 	for(i=0;i<DAC_SAMPLE_POINT;i++)
 	{
 		tmp_l = ladc_l[i] + ladc_mic[i];
 		tmp_r = ladc_r[i] + ladc_mic[i];
-		if(tmp_l < -32768) 
+		if(tmp_l < -32768)
 			tmp_l = -32768;
-		else if(tmp_l > 32767) 
+		else if(tmp_l > 32767)
 			tmp_l = 32767;
-		if(tmp_r < -32768) 
+		if(tmp_r < -32768)
 			tmp_r = -32768;
-		else if(tmp_r > 32767) 
+		else if(tmp_r > 32767)
 			tmp_r = 32767;
 		ladc_l[i] = tmp_l;
 		ladc_r[i] = tmp_r;
@@ -432,7 +444,7 @@ void ladc_isr_callback(void *ladc_buf,u32 buf_flag,u32 buf_len)
 
 #if (BT_EMITTER_EN &&(EMITTER_AUX_CHANNEL == 2))
 	if(get_emitter_role() == BD_ROLE_HOST) {
-		ladc_channel_combine(ladc_l,ladc_r,DAC_DUAL_BUF_LEN);	
+		ladc_channel_combine(ladc_l,ladc_r,DAC_DUAL_BUF_LEN);
 		res = ladc_combine_buf;
 	}
 #endif
@@ -455,7 +467,7 @@ void ladc_isr_callback(void *ladc_buf,u32 buf_flag,u32 buf_len)
 				}
 				return;
 			}
-			
+
 			if(aec_interface.fill_adc_ref_buf)
 			{
 #if BT_KTV_EN
@@ -528,9 +540,9 @@ void microphone_open(u8 mic_gain,u8 mic_gx2)
 
 	//init mic IO
 	JL_PORTB->DIR |=  BIT(13);
-	JL_PORTB->DIE &= ~BIT(13);	
-	JL_PORTB->PD  &= ~BIT(13);	
-	JL_PORTB->PU  &= ~BIT(13);	
+	JL_PORTB->DIE &= ~BIT(13);
+	JL_PORTB->PD  &= ~BIT(13);
+	JL_PORTB->PU  &= ~BIT(13);
 
 	ladc_adcude(1);
 	ladc_mic_gain(mic_gain,mic_gx2);
@@ -550,26 +562,40 @@ void microphone_close(void)
 //*********************************************************
 //                        Emitter Aux API
 //*********************************************************
+static u8 aux_channel = DAC_AMUX2;
+u8 switch_aux_channel_flag = 0;
+u8 clear_aux_plosive_flag = 0;
+void emitter_aux_set_channel(u8 channel_idx)
+{
+    if((DAC_AMUX0 <= channel_idx)&&(channel_idx <= DAC_AMUX2))
+        aux_channel = channel_idx;
+    else
+        aux_channel = DAC_AMUX1;
+}
+u8 get_aux_channel()
+{
+    return aux_channel;
+}
 void emitter_aux_open()
 {
-	if(LINEIN_CHANNEL == DAC_AMUX0) {
+	if(aux_channel == DAC_AMUX0) {
     	JL_PORTA->DIR |=  (BIT(1)|BIT(2));
     	JL_PORTA->DIE &= ~(BIT(1)|BIT(2));
 	}
-	else if(LINEIN_CHANNEL == DAC_AMUX1) {
+	else if(aux_channel == DAC_AMUX1) {
     	JL_PORTA->DIR |=  (BIT(4)|BIT(3));
     	JL_PORTA->DIE &= ~(BIT(4)|BIT(3));
-		JL_PORTA->PD  &= ~(BIT(3));//PA3 default pull_down 
+		JL_PORTA->PD  &= ~(BIT(3));//PA3 default pull_down
 	}
-	else if(LINEIN_CHANNEL == DAC_AMUX2) {
+	else if(aux_channel == DAC_AMUX2) {
     	JL_PORTB->DIR |=  (BIT(11)|BIT(12));
     	JL_PORTB->DIE &= ~(BIT(11)|BIT(12));
-	} 
+	}
 	set_sys_vol(0,0,FADE_ON);
-	if(LINEIN_CHANNEL > DAC_AMUX2) {
+	if(aux_channel > DAC_AMUX2) {
 		puts("ladc_mono:");
-		if(	(LINEIN_CHANNEL == DAC_AMUX0_L_ONLY)||(LINEIN_CHANNEL == DAC_AMUX1_L_ONLY)||\
-			(LINEIN_CHANNEL == DAC_AMUX2_L_ONLY)||(LINEIN_CHANNEL == DAC_AMUX_DAC_L)) {
+		if(	(aux_channel == DAC_AMUX0_L_ONLY)||(aux_channel == DAC_AMUX1_L_ONLY)||\
+			(aux_channel == DAC_AMUX2_L_ONLY)||(aux_channel == DAC_AMUX_DAC_L)) {
 			puts("LeftChannel\n");
     		ladc_reg_init(ENC_LINE_LEFT_CHANNEL , LADC_SR44100);
 		}
@@ -581,14 +607,13 @@ void emitter_aux_open()
 	else {
 		puts("ladc_dual\n");
     	ladc_reg_init(ENC_LINE_LR_CHANNEL , LADC_SR44100);
-#ifdef LADC_AUX_AND_MIC
-    	ladc_reg_init(ENC_MIC_CHANNEL , LADC_SR44100);
-#endif
 	}
-	amux_channel_en(LINEIN_CHANNEL,1);
+	dac_AmuxGain_en(1);///输入放大一倍///
+	amux_channel_en(aux_channel,1);
 }
 
 void emitter_aux_close()
 {
-	ladc_close(LINEIN_CHANNEL);
+	amux_channel_en(aux_channel,0);
+	ladc_close(aux_channel);
 }

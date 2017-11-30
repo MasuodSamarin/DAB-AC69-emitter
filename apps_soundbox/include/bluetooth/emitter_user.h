@@ -30,4 +30,26 @@ extern void search_bd_name_filt_handle_register(u8 (*handle)(u8 *data,u8 len)) ;
 extern void search_bd_addr_filt_handle_register(u8 (*handle)(u8 *addr)) ;
 extern void bd_inquiry_result_custom_register(u8 (handle)(char *bd_name,u8 name_len,u8 *addr));
 
+typedef enum
+{
+    USER_CMD_GET_BT_NAME_SEARCH,    ///获取搜索蓝牙名
+    USER_CMD_GET_BT_NAME,           ///获取连接蓝牙名
+    USER_CMD_GET_AUX_STATUS,        ///linein状态，0:OFF，1:ON
+    USER_CMD_GET_PH_STATUS,         ///耳机状态，0:OFF，1:ON
+    USER_CMD_GET_BT_SWITCH,         ///蓝牙主从机，0:slave,1:host
+    USER_CMD_GET_INPUT_SWITCH,      ///输入源切换，0:FM&&DAB，1:aux，2:bt，3:
+    USER_CMD_CONNECTED,
+    USER_CMD_DISCONNECT_AND_RESCAN,
+    USER_CMD_AUDIO_MUTE,            ///0:unmute,1:mute
+    USER_CMD_BT_NEXT_FILE,          ///蓝牙接收模式，下一首
+    USER_CMD_BT_PREV_FILE,          ///蓝牙接收模式，上一首
+    USER_CMD_BT_PP,                 ///蓝牙接收模式，Play/Pause
+    USER_CMD_POWER,                 ///power on 1,power down 0
+    USER_CMD_CLEAR_PLOSIVE,         ///clear 1,close 0
+    USER_CMD_MAX,
+}ENUM_USER_CMD_TYPE;
+extern u8 user_profile_send(ENUM_USER_CMD_TYPE cmd,u8 *data,u8 len);
+
+extern u8 * get_connect_target(void);
+
 #endif

@@ -74,7 +74,7 @@ void halfsec_msg_sender(char *name, u32 msg)
 	}
 	else
 	{
-		u32 tmp;	
+		u32 tmp;
 		fun_printf++;
 		OS_TCB *self_task = os_get_task_tcb(OS_TASK_SELF);
 		/*asm("mov %0, RETI " : "=r" (tmp));
@@ -111,6 +111,11 @@ void timer0_isr_callback()
 
         g_var.sys_halfsec = !g_var.sys_halfsec;//led7 driver
 		halfsec_msg_sender(keymsg_task_name,MSG_HALF_SECOND);
+		halfsec_msg_sender(MAIN_TASK_NAME,MSG_HALF_SECOND);
+//		{
+//		    extern u8 emulate_uart_receive(void);
+//            emulate_uart_receive();
+//		}
     }
 
 

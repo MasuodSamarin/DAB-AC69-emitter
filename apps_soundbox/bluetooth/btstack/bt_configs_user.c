@@ -125,8 +125,8 @@ static void low_pwr_deal(u8 mode,u32 timer_ms)
 }
 
 ///---sdp service record profile- 用户选择支持协议--///
-#define USER_SUPPORT_PROFILE_SPP    1
-#define USER_SUPPORT_PROFILE_HFP    1
+#define USER_SUPPORT_PROFILE_SPP    0
+#define USER_SUPPORT_PROFILE_HFP    0
 #define USER_SUPPORT_PROFILE_A2DP   1
 #define USER_SUPPORT_PROFILE_AVCTP  1
 #define USER_SUPPORT_PROFILE_HID    0
@@ -238,7 +238,7 @@ static void bt_function_select_init()
     __bt_set_sniff(SNIFF_MODE_CONF,SNIFF_CNT_TIME);/*设置进入sniff是进入poweroff还是powerdown，设置空闲多少s进入sniff*/
 
     __bt_set_update_battery_time(10000); /*设置电量显示发送更新的周期时间，为0表示关闭电量显示功能，单位毫秒，u32, 不能小于5000ms*/
-    __bt_set_a2dp_auto_play_flag(0); /*高级音频连接完成自动播放歌曲使能, 0不使能，1使能*/
+    __bt_set_a2dp_auto_play_flag(1); /*高级音频连接完成自动播放歌曲使能, 0不使能，1使能*/
     __set_simple_pair_flag(1);       /*提供接口外部设置配对方式,1使能简易配对。0使用pin code, 会使用配置文件的值*/
 #if BT_STEREO
     __set_user_ctrl_conn_num(2);     /*用户设置支持连接的个数，1 或 2*/
@@ -254,7 +254,7 @@ static void bt_function_select_init()
     __set_auto_conn_device_num(1);   /*该接口用于设置上电回连需要依次搜索设备的个数。0表示上电不回连。大于20无效，直到连上一个*/
 #endif
     __set_page_timeout_value(5000); /*回连搜索时间长度设置,可使用该函数注册使用，ms单位,u16*/
-	__set_sbc_cap_bitpool(53);//38 
+	__set_sbc_cap_bitpool(53);//38
 #if BT_HID_INDEPENDENT_MODE
     __set_hid_auto_disconn_en(0);    /*是否自动断开手机的HID连接,1会断开，0是保留HID连接*/
 #else
@@ -301,11 +301,13 @@ static void call_vol_change(int vol)
 }
 /*用接口读取名字时会从该回调函数返回，默认连接上就有一次回调，
 要使用远端设备名字的可以copy保存*/
+extern void get_remote_bt_name(u8 *data);
 static void bt_read_remote_name(u8 *name)
 {
     puts("\n remote name : ");
     puts((char *)name);
     puts("\n");
+    get_remote_bt_name(name);
 }
 
 /*返回一个标志，有需要可以添加操作，*/
@@ -375,7 +377,7 @@ static void spp_rcsp_data_deal(u8 packet_type, u16 channel, u8 *packet, u16 size
  			 rcsp_event_com_start(RCSP_APP_TYPE_SPP);
              rcsp_register_comsend(bt_spp_send_data);
              break;
-        
+
 		case 2:
              //连接断开
              puts("spp disconnect\n");
@@ -385,7 +387,7 @@ static void spp_rcsp_data_deal(u8 packet_type, u16 channel, u8 *packet, u16 size
 #endif
 			 spp_mutex_del();
              break;
-        
+
 		case 7://DATA
             ///puts("SP ");
             rcsp_comdata_recieve(packet,size);
@@ -408,7 +410,7 @@ static void set_device_volume(int volume )
 	if(!is_check_stereo_slave())
 	{
 		stereo_host_cmd_handle(MSG_VOL_STEREO,dac_ctl.sys_vol_r);
-			
+
 	}
 #endif
     set_sys_vol(dac_ctl.sys_vol_l, dac_ctl.sys_vol_r, FADE_ON);
@@ -549,7 +551,7 @@ static u8 bt_get_macro_value(BT_STACK_MACRO type)
         case BT_TRIM_MODE:
 #if(BT_MODE == NORMAL_MODE)
             return BT_TRIM_ONCE;//BT_TRIM_ALWAYS
-#else 
+#else
 			return BT_TRIM_ALWAYS;
 #endif
 		case BT_ESCO_FILTER_LEVEL:
@@ -641,7 +643,7 @@ static void bredr_handle_register()
 	bt_chip_io_type_setting(RTCVDD_TYPE , BTAVDD_TYPE);
 	bt_set_noconnect_lowpower_fun(1,pwr_timer_in,pwr_timer_out);/*设置没有连接的时候是否进入低功耗模式*/
 	esco_handle_register(get_esco_st);
-#if BT_STEREO	
+#if BT_STEREO
 	bt_stereo_register(bt_save_stereo_info,stereo_sys_vol_sync,stereo_deal_cmd);  /*对箱接口*/
 #else
 	bt_stereo_register(NULL,NULL,NULL);  /*对箱接口*/
@@ -674,7 +676,8 @@ void bt_app_cfg()
 	cfg_bt_pll_para(OSC_Hz,SYS_Hz,BT_ANALOG_CFG,BT_XOSC);
  	cfg_bredr_mem(rx_mem,sizeof(rx_mem),tx_mem,sizeof(tx_mem));
 	/*internal capacitor range:0x00~0x1F*/
-	bt_osc_internal_cfg(0x11,0x11);
+//	bt_osc_internal_cfg(0x11,0x11);
+	bt_osc_internal_cfg(0x0E,0x11);
 
     bt_get_macro_handle_register(bt_get_macro_value); /*must set*/
 

@@ -21,7 +21,7 @@ MCLK        PC12/PA14
 
 #ifdef AUTO_LINK
 
-#define IIS_TEST     1
+#define IIS_TEST     0
 
 #if IIS_TEST
 const u8 sine_buf_32K_iis[] =
@@ -58,7 +58,9 @@ void alink_isr(void)
        buf_addr0 = get_iis_addr(IIS_CHANNEL0_SEL);
 //        printf("%x ",*buf_addr0);
 //        dac_write(sine_buf_32K,sizeof(sine_buf_32K));
-        //cbuf_write_dac(buf_addr0,sizeof(alink_output_buf)/2);
+#if 1///
+        cbuf_write_dac(buf_addr0,sizeof(alink_output_buf)/2);
+#else
 		///*********录音用***************///
 		//cbuf_write_dac(buf_addr0, DAC_BUF_LEN); //DAC 实时播放
         if (NULL != p_ladc)
@@ -75,6 +77,7 @@ void alink_isr(void)
 				}
             }
         }
+#endif // 1
     }
     if(reg & BIT(5))  //channel 1
     {
@@ -271,28 +274,28 @@ void * get_iis_addr(u8 channel_sel)
 #if IIS_CHANNEL0_EN
         buf_used_addr = (JL_IIS->CON0 & BIT(12))? alink_output_buf[0]:alink_output_buf[1];
 #endif
-			
+
 	}
 	else if(channel_sel==IIS_CHANNEL1_SEL)
 	{
 #if IIS_CHANNEL1_EN
          buf_used_addr = (JL_IIS->CON0 & BIT(13))? alink_output_buf[0]:alink_output_buf[1];
 #endif
-			
+
 	}
 	else if(channel_sel==IIS_CHANNEL2_SEL)
 	{
 #if IIS_CHANNEL2_EN
         buf_used_addr = (JL_IIS->CON0 & BIT(14))? alink_output_buf[0]:alink_output_buf[1];
 #endif
-			
+
 	}
 	else if(channel_sel==IIS_CHANNEL3_SEL)
 	{
 #if IIS_CHANNEL3_EN
          buf_used_addr = (JL_IIS->CON0 & BIT(15))? alink_output_buf[0]:alink_output_buf[1];
 #endif
-			
+
 	}
 
     return buf_used_addr;
@@ -312,7 +315,8 @@ void audio_link_init(void)
     JL_IIS->LEN = 32;
 
     /* iis_set_sr(8000); */
-    iis_set_sr(32000);
+//    iis_set_sr(32000);
+    iis_set_sr(44100);
 
     ALINK_EN(1);
     puts("IIS_INIT_OVER\n");

@@ -79,27 +79,27 @@ void set_poweroff_wakeup_io()
 	u8 wakeup_io_en = 0;
 	u8 wakeup_edge = 0;
 
-	//BIT(0)  PR0 : 0 disable  1 enable	
-	//BIT(1)  PR1 : 0 disable  1 enable	
-	//BIT(2)  PR2 : 0 disable  1 enable	
-	//BIT(3)  PR3 : 0 disable  1 enable	
+	//BIT(0)  PR0 : 0 disable  1 enable
+	//BIT(1)  PR1 : 0 disable  1 enable
+	//BIT(2)  PR2 : 0 disable  1 enable
+	//BIT(3)  PR3 : 0 disable  1 enable
 	/* wakeup_io_en |= WAKE_UP_PR0 | WAKE_UP_PR1 | WAKE_UP_PR2 | WAKE_UP_PR3; */
 	wakeup_io_en |=  WAKE_UP_PR2;
 
 	//BIT(4)  PR0 : 0 rising dege  1 failling edge
-	//BIT(5)  PR1 : 0 rising dege  1 failling edge 	
-	//BIT(6)  PR2 : 0 rising dege  1 failling edge 
-	//BIT(7)  PR3 : 0 rising dege  1 failling edge 
+	//BIT(5)  PR1 : 0 rising dege  1 failling edge
+	//BIT(6)  PR2 : 0 rising dege  1 failling edge
+	//BIT(7)  PR3 : 0 rising dege  1 failling edge
 	/* wakeup_edge |= EDGE_PR0 | EDGE_PR1 | EDGE_PR2 | EDGE_PR3;     //failling edge */
 	/* wakeup_edge &= ~(EDGE_PR0 | EDGE_PR1 | EDGE_PR2 | EDGE_PR3);  //rising dege */
 	wakeup_edge |= EDGE_PR2;     //failling edge
 
-	soft_poweroff_wakeup_io(wakeup_io_en , wakeup_edge); 
+	soft_poweroff_wakeup_io(wakeup_io_en , wakeup_edge);
 }
 
 /*enter sleep mode wakeup IO setting*/
 void enter_sleep_mode_set(u16 wakeup_cfg , u8 wakeup_edge)
-{	
+{
 	close_wdt();
 
 	dac_off_control(); //close dac mudule
@@ -332,7 +332,7 @@ void enter_sleep_mode_set(u16 wakeup_cfg , u8 wakeup_edge)
 			break;
 
 		default:
-			return;	
+			return;
 	}
 }
 
@@ -377,8 +377,8 @@ static void delay_us(u32 n)
 }
 
 
-extern const u32 ad_table[]; 
-extern void adc_init_api(u32 channel,u32 lsb_clk,u8 lvd_en); 
+extern const u32 ad_table[];
+extern void adc_init_api(u32 channel,u32 lsb_clk,u8 lvd_en);
 extern void adc_scan(void *param);
 extern u16 get_battery_level(void);
 
@@ -386,9 +386,9 @@ static u8 low_power_cnt = 0;
 static u32 normal_power_cnt = 0;
 
 /* mode 1:power on     2:power off*/
-void ldo5v_detect_deal(u8 mode) 
+void ldo5v_detect_deal(u8 mode)
 {
-	static u32 delay_2ms_cnt = 0; 
+	static u32 delay_2ms_cnt = 0;
 	u8 val = 0;
 	u8 tmp;
 
@@ -397,7 +397,7 @@ void ldo5v_detect_deal(u8 mode)
 }
 //message in this table can do when a phone call
 //be careful to add a message
-const int check_msg_table[] = 
+const int check_msg_table[] =
 {
 	SYS_EVENT_LGDEV_ONLINE,
 	SYS_EVENT_LGDEV_OFFLINE,
@@ -435,7 +435,7 @@ static void TaskMain(void *p)
 #if 0
 	    #include "iic.h"
 	    eeprom_verify();
-		while(1); 
+		while(1);
 #endif
 
 
@@ -447,7 +447,7 @@ static void TaskMain(void *p)
     {
         os_taskq_pend(0, ARRAY_SIZE(msg), msg);
         if(msg[0] == MSG_POWER_ON)
-        {	
+        {
             puts("\n****************power_on***************\n");
             soft_power_ctl(PWR_ON);
             break;
@@ -455,7 +455,7 @@ static void TaskMain(void *p)
     }
   #else
 	while(1)
-	{	
+	{
 		rtc_module_ldo5v_detect(1,0);
 		soft_power_ctl(PWR_OFF);
 	    memset(msg,0x00,sizeof(msg));
@@ -465,19 +465,19 @@ static void TaskMain(void *p)
 			printf("key:%x\n",msg[0]);
 		}
 	    if(msg[0] == MSG_POWER_ON)
-		{	 
+		{
 			puts("****************power_on***************\n");
 	        soft_poweroff_cnt = 0;
             soft_power_ctl(PWR_ON);
 	    }
 		else if(msg[0] == MSG_POWER_OFF)
-		{	   
+		{
 			puts("****************power_off***************\n");
 		    soft_power_ctl(PWR_OFF);
 		}
 	}
-#endif		
-#endif		
+#endif
+#endif
 
 	//SFR(JL_SYSTEM->LDO_CON,7,3,1);
     led_init();
@@ -514,11 +514,11 @@ static void TaskMain(void *p)
 				}
 			}
 			if(!flag)
-			   continue;	
+			   continue;
 		}
         //printf("main_msg %08x %08x \n",msg[0],msg[1]);
 #if SUPPORT_APP_RCSP_EN
-		rcsp_main_task_msg_deal_before(msg);	
+		rcsp_main_task_msg_deal_before(msg);
 #endif
 		switch(msg[0])
         {
@@ -570,14 +570,15 @@ static void TaskMain(void *p)
 						else
 						{
 							puts("create music task\n");
-							set_emitter_aux_media(0);
+//							emitter_aux_set_channel(DAC_AMUX1);
+//							set_emitter_aux_media(1);
 							if(music_task_runing == 2) {
 								os_task_delete(PC_TASK_NAME);
 								do {
 									os_time_dly(1);
 								}while(music_task_runing);
 							}
-							task_create(MUSIC_TASK_NAME);	
+							task_create(MUSIC_TASK_NAME);
 						}
 					}
                     else if((task_switch(MUSIC_TASK_NAME, 0,SWITCH_SPEC_TASK)==RUN_TASK_ERR_HAS_RPT))
@@ -602,8 +603,39 @@ static void TaskMain(void *p)
             lg_dev_status_chg(SYS_EVENT_LGDEV_OFFLINE,(void *)msg[1],1);
             break;
 
+        case SYS_EVENT_PH_OUT:
+			puts("SYS_EVENT_PH_OUT\n");
+			{
+                ///由STM32发命令过来才切换
+                u8 data = 0;
+                user_profile_send(USER_CMD_GET_PH_STATUS,&data,1);
+//                break;
+			}
+//			if(get_emitter_role() == BD_ROLE_SLAVE) {
+                os_taskq_post_msg(MAIN_TASK_NAME, 1, MSG_SWITCH_EMITTER_ROLE);
+//			}
+            break;
+        case SYS_EVENT_PH_IN:
+			puts("SYS_EVENT_PH_IN\n");
+			{
+                ///由STM32发命令过来才切换
+                u8 data = 1;
+                user_profile_send(USER_CMD_GET_PH_STATUS,&data,1);
+//                break;
+			}
+			if(get_emitter_role() == BD_ROLE_HOST) {
+                os_taskq_post_msg(MAIN_TASK_NAME, 1, MSG_SWITCH_EMITTER_ROLE);
+			}
+            break;
+
 		case SYS_EVENT_AUX_IN:
 			puts("SYS_EVENT_AUX_IN\n");
+			{
+                ///由STM32发命令过来才切换
+                u8 data = 1;
+                user_profile_send(USER_CMD_GET_AUX_STATUS,&data,1);
+                break;
+			}
 			if(get_emitter_role() == BD_ROLE_HOST) {
 				if(!g_bt_conn_status)//Ignore Aux In when bt disconnect
 					break;
@@ -620,21 +652,34 @@ static void TaskMain(void *p)
 						os_time_dly(1);
 					}while(music_task_runing);
 				}
-				set_emitter_aux_media(1);
+//				set_emitter_aux_media(0);
+//                emitter_aux_set_channel(DAC_AMUX0);
+//				set_emitter_aux_media(1);
 			} else {
 				if(os_time_get() > 200)
-					task_switch(LINEIN_TASK_NAME,0,SWITCH_SPEC_TASK);
-			}
+                    emitter_aux_set_channel(DAC_AMUX0);
+                    task_switch(IDLE_TASK_NAME,0,SWITCH_SPEC_TASK);
+            }
             break;
 
 		case SYS_EVENT_AUX_OUT:
 			puts("SYS_EVENT_AUX_OUT\n");
+			{
+                ///由STM32发命令过来才切换
+                u8 data = 0;
+                user_profile_send(USER_CMD_GET_AUX_STATUS,&data,1);
+                break;
+			}
 			if(get_emitter_role() == BD_ROLE_HOST) {
-				set_emitter_aux_media(0);
-				task_create(MUSIC_TASK_NAME);
+//				set_emitter_aux_media(0);
+//                emitter_aux_set_channel(DAC_AMUX1);
+//                set_emitter_aux_media(1);
 			} else {
-            	if(compare_task_name(LINEIN_TASK_NAME))
-					task_switch(0,0,SWITCH_NEXT_TASK);
+//            	if(compare_task_name(LINEIN_TASK_NAME))
+                    emitter_aux_close();
+                    emitter_aux_set_channel(DAC_AMUX1);
+//					task_switch(LINEIN_TASK_NAME,0,SWITCH_SPEC_TASK);
+                    task_switch(IDLE_TASK_NAME,0,SWITCH_SPEC_TASK);
 			}
 			break;
 
@@ -654,7 +699,7 @@ static void TaskMain(void *p)
 						}while(music_task_runing);
 					}
 					puts("create PC task\n");
-					task_create(PC_TASK_NAME); 
+					task_create(PC_TASK_NAME);
 				}
 				else {
             		task_switch(PC_TASK_NAME, 0, SWITCH_SPEC_TASK);
@@ -697,6 +742,10 @@ static void TaskMain(void *p)
 #if BT_EMITTER_EN
 		case MSG_DELETE_TASK:
 			puts("MSG_DELETE_TASK\n");
+			{
+			    extern void get_remote_bt_name(u8 *data);
+			    get_remote_bt_name((u8 *)"No device");
+			}
 			if(msg[1] == MSG_MUSIC_DEV_OFFLINE) {
 				if(music_task_runing == 1)
 				{
@@ -718,14 +767,20 @@ static void TaskMain(void *p)
 			break;
 		case MSG_CREATE_TASK:
 			puts("MSG_CREATE_TASK\n");
-			if(task_create(MUSIC_TASK_NAME)) {
-				if(aux_is_online()) {
-					set_emitter_aux_media(1);
-				}
-				else {
-					puts("meida source NULL\n");
-				}
-			}
+//			if(aux_is_online()){
+//                emitter_aux_set_channel(DAC_AMUX0);
+//			}else{
+//                emitter_aux_set_channel(DAC_AMUX1);
+//			}
+            set_emitter_aux_media(1);
+//			if(task_create(MUSIC_TASK_NAME)) {
+//				if(aux_is_online()) {
+//					set_emitter_aux_media(1);
+//				}
+//				else {
+//					puts("meida source NULL\n");
+//				}
+//			}
 			break;
 		case MSG_SWITCH_EMITTER_ROLE:
 			puts("MSG_SWITCH_EMITTER_ROLE\n");
@@ -746,18 +801,132 @@ static void TaskMain(void *p)
 			task_switch(IDLE_TASK_NAME,0,SWITCH_SPEC_TASK);
 			break;
 		case MSG_EXIT_IDLE_TASK:
-			if(get_emitter_role() == BD_ROLE_HOST) {
+			if((get_emitter_role() == BD_ROLE_HOST)||(ph_is_online())) {///
 				puts("sw_2_slave\n");
 				emitter_init(BD_ROLE_SLAVE);
+				emitter_aux_close();
+                task_switch(LINEIN_TASK_NAME,0,SWITCH_SPEC_TASK);
+                break;
 			}
 			else {
 				puts("sw_2_host\n");
 				emitter_init(BD_ROLE_HOST);
+                task_switch(BTSTACK_TASK_NAME,0,SWITCH_SPEC_TASK);
 			}
-			task_switch(BTSTACK_TASK_NAME,0,SWITCH_SPEC_TASK);
+            extern u8 MCU_mute_flag;
+			MCU_mute_flag = 0;
 			break;
 #endif
-
+        case MSG_USER_CMD:
+            puts("MSG_USER_CMD\n");
+            extern u8 MCU_mute_flag;
+            if((msg[1] == USER_CMD_GET_INPUT_SWITCH)&&(ph_is_online()))///蓝牙模式
+            {
+                MCU_mute_flag = 0;
+                switch(msg[2])
+                {
+                    case 0:///FM&&DAB
+                        puts("FM--DAB\n");
+                        emitter_init(BD_ROLE_SLAVE);
+                        emitter_aux_close();
+                        emitter_aux_set_channel(DAC_AMUX1);
+                        task_switch(IDLE_TASK_NAME,0,SWITCH_SPEC_TASK);
+//                        os_time_dly(20);
+//                        task_switch(LINEIN_TASK_NAME,0,SWITCH_SPEC_TASK);
+                        break;
+                    case 1:///aux
+                        puts("AUX\n");
+                        emitter_init(BD_ROLE_SLAVE);
+                        emitter_aux_close();
+                        emitter_aux_set_channel(DAC_AMUX0);
+                        task_switch(IDLE_TASK_NAME,0,SWITCH_SPEC_TASK);
+//                        os_time_dly(20);
+//                        task_switch(LINEIN_TASK_NAME,0,SWITCH_SPEC_TASK);
+                        break;
+                    case 2:///bt
+                        puts("BT\n");
+                        emitter_init(BD_ROLE_SLAVE);
+                        emitter_aux_close();
+                        task_switch(BTSTACK_TASK_NAME,0,SWITCH_SPEC_TASK);
+                        break;
+                }
+            }else if(msg[1] == USER_CMD_GET_INPUT_SWITCH)///蓝牙主机模式
+            {
+                extern u8 switch_aux_channel_flag ;
+                MCU_mute_flag = 0;
+                switch(msg[2])
+                {
+                    case 0:///FM&&DAB
+                        puts("FM--DAB\n");
+                        switch_aux_channel_flag = 1;
+                        set_emitter_aux_media(0);
+                        emitter_aux_set_channel(DAC_AMUX1);
+                        set_emitter_aux_media(1);
+//                        puts("delay 1s\n");
+                        os_time_dly(100);
+                        switch_aux_channel_flag = 0;
+                        break;
+                    case 1:///aux
+                        puts("AUX\n");
+                        switch_aux_channel_flag = 1;
+                        set_emitter_aux_media(0);
+                        emitter_aux_set_channel(DAC_AMUX0);
+                        set_emitter_aux_media(1);
+                        os_time_dly(100);
+                        switch_aux_channel_flag = 0;
+                        break;
+                }
+            }else if(msg[1] == USER_CMD_AUDIO_MUTE)
+            {
+                puts("main--USER_CMD_AUDIO_MUTE\n");
+                extern u8 switch_aux_channel_flag ;
+                extern u8 half_cnt;
+                if(msg[2] == 1){
+                    MCU_mute_flag = 1;
+                    half_cnt = 0;
+                    if((ph_is_online())){
+                        set_sys_vol(0,0,FADE_ON);
+//                        dac_mute(1,1);
+                    }else{
+                        switch_aux_channel_flag = 1;
+                        os_time_dly(10);
+                        set_emitter_aux_media(0);
+                    }
+//                    set_sys_vol(0,0,FADE_ON);
+                }else if(msg[2] == 0){
+                    MCU_mute_flag = 0;
+                    if((ph_is_online())&&(compare_task_name("BtStackTask"))){
+                        set_sys_vol(dac_ctl.sys_vol_l, dac_ctl.sys_vol_r, FADE_ON);
+//                        dac_mute(1,1);
+                    }else{
+                    }
+                }
+            }else if(msg[1] == USER_CMD_CLEAR_PLOSIVE)
+            {
+                puts("main--USER_CMD_CLEAR_PLOSIVE\n");
+                extern u8 clear_aux_plosive_flag ;
+                if(msg[2] == 1){
+                    clear_aux_plosive_flag = 1;
+                    if((ph_is_online())){
+                        set_sys_vol(0,0,FADE_ON);
+//                        dac_mute(1,1);
+                    }
+                }else if(msg[2] == 0){
+                    clear_aux_plosive_flag = 0;
+                    if((ph_is_online())){
+                        set_sys_vol(dac_ctl.sys_vol_l, dac_ctl.sys_vol_r, FADE_ON);
+//                        dac_mute(1,1);
+                    }
+                }
+            }
+            break;
+        case MSG_HALF_SECOND:
+//            puts("half-sec \n");
+            {
+                extern void user_profile_test(void);
+                user_profile_test();
+            }
+            break;
         case MSG_CHANGE_WORKMODE:
             puts("MSG_CHANGE_WORKMODE\n");
 			if(get_emitter_role() == BD_ROLE_HOST) {
@@ -771,7 +940,7 @@ static void TaskMain(void *p)
 					}
 				} else {
 					set_emitter_aux_media(0);
-					task_create(MUSIC_TASK_NAME);	
+					task_create(MUSIC_TASK_NAME);
 				}
 			}
 			else {
@@ -832,11 +1001,11 @@ static void TaskMain(void *p)
             vm_cache_write(VM_SYS_VOL,&dac_ctl.sys_vol_l,2);
 #endif
             UI_menu_arg(MENU_MAIN_VOL,0);
-			
+
             break;
 
         case MSG_VOL_UP:
-		
+
 			if(msg[1]&0x80)
             {
 				dac_ctl.sys_vol_l = (u8)(msg[1]&0x7f);
@@ -879,7 +1048,7 @@ static void TaskMain(void *p)
             vm_cache_write(VM_SYS_VOL,&dac_ctl.sys_vol_l,2);
 #endif
             UI_menu_arg(MENU_MAIN_VOL,0);
-			
+
             break;
 #if BT_STEREO
         case MSG_VOL_STEREO:
@@ -916,7 +1085,7 @@ static void TaskMain(void *p)
             }
             UI_menu(MENU_REFRESH);
             break;
-        
+
         case MSG_LOW_POWER:
             puts("**MSG_LOW_POWER,auto shutdown**\n");
             going_to_pwr_off = 0;
@@ -1073,13 +1242,11 @@ static void TaskMain(void *p)
             break;
 		case SYS_EVENT_SYS_TIMER_DELAY:
 			break;
-        //case MSG_HALF_SECOND:
-           // puts("half-sec \n");
-            //break;
+
         }
 
 #if SUPPORT_APP_RCSP_EN
-		rcsp_main_task_msg_deal_after(msg);	
+		rcsp_main_task_msg_deal_after(msg);
 #endif
 
 	}

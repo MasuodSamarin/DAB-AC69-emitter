@@ -234,7 +234,13 @@ static void play_sel_task(void *p)
 		dac_on_control();
 	}
     dac_channel_on(MUSIC_CHANNEL, FADE_ON);
-    set_sys_vol(dac_ctl.sys_vol_l, dac_ctl.sys_vol_r, FADE_ON);
+
+    extern u8 MCU_mute_flag;
+    if(MCU_mute_flag){
+        set_sys_vol(0,0,FADE_ON);
+    }else{
+        set_sys_vol(dac_ctl.sys_vol_l, dac_ctl.sys_vol_r, FADE_ON);
+    }
 	audio_sfr_dbg(0);
 
     while(1)

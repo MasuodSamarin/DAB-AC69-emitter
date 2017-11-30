@@ -8,8 +8,6 @@
 #include "fcc_test.h"
 #include "clock.h"
 
-
-
 __uart_handle uart0_handle;
 __uart_handle uart1_handle;
 __uart_handle uart2_handle;
@@ -18,6 +16,8 @@ __uart_handle *uart_put_handle;
 __uart_handle *uart_updata_handle;
 __uart_handle *fcc_uart_handle;
 __uart_handle *eq_dbg_handle;
+
+__uart_handle *user_uart_handle;
 
 s32 uart_set_baud(u32 baud)
 {
@@ -39,14 +39,13 @@ CLOCK_SWITCH_USER_REGISTER(CLOCK_SWITCH_EXIT, &clock_switch_uart, uart_reset, "U
 #define UART1   	1
 #define UART2   	2
 #define UART_NO		UART0
-#define UART_IO		UART_TXPA5_RXPA6	
-s32 uart_init(u32 baud)
-{
+#define UART_IO		UART_TXPC2_RXPC3
+s32 uart_init(u32 baud)
+{
     s32 status = 0;
 	__uart_handle *uart_handle;
 	char *uart_name;
     uart_put_handle=NULL;
-
 	if(UART_NO == UART0) {
 		uart_handle = &uart0_handle;
 		uart_name = UART0_HARDWARE_NAME;
@@ -65,34 +64,75 @@ s32 uart_init(u32 baud)
     uart_module_on();
 #ifdef __DEBUG
     status=uart_module_open(uart_handle,uart_name);
-    if(!status)
-    {
-       __uart_param cur_param;
-	   memset(&cur_param,0,sizeof(__uart_param));
-       cur_param.baud_rate=baud;
+    if(!status)
+    {
+       __uart_param cur_param;
+	   memset(&cur_param,0,sizeof(__uart_param));
+       cur_param.baud_rate=baud;
        cur_param.io=UART_IO;
-       cur_param.workmode=UART_WORKMODE_NORMAL;
-       cur_param.custom = 0;
-       status=uart_module_init(uart_handle,&cur_param);
-	   if(UART_OUTPUT_CHAL==cur_param.io)///设置要作为串口的GPIO
-	   {
-		  JL_PORTB->DIR&= ~BIT(9);
-		  JL_PORTB->DIE &= ~BIT(9);
-		  JL_PORTB->PD |= BIT(9);
-		  JL_PORTB->PU |= BIT(9);
-	   }
-       if(!status)
-       {
-           status=uart_module_start(uart_handle);
-           if(!status)
-               uart_put_handle=uart_handle;
-       }
+       cur_param.workmode=UART_WORKMODE_NORMAL;
+       cur_param.custom = 0;
+       status=uart_module_init(uart_handle,&cur_param);
+	   if(UART_OUTPUT_CHAL==cur_param.io)///设置要作为串口的GPIO
+	   {
+		  JL_PORTB->DIR&= ~BIT(9);
+		  JL_PORTB->DIE &= ~BIT(9);
+		  JL_PORTB->PD |= BIT(9);
+		  JL_PORTB->PU |= BIT(9);
+	   }
+       if(!status)
+       {
+           status=uart_module_start(uart_handle);
+           if(!status)
+               uart_put_handle=uart_handle;
+       }
     }
 	register_handle_printf_putchar(putchar);
-#endif
-
-    return status;
-}
+#endif
+    return status;
+}
+
+extern void user_uart_isr_callback(u8 uto_buf,void *p, u8 isr_flag);
+void user_uart_init()
+{
+	u32 status = 0;
+	puts("-----user_uart_init\n");
+    user_uart_handle=NULL;
+    status=uart_module_open(&uart1_handle,UART1_HARDWARE_NAME);
+    if(!status)
+    {
+       __uart_param user_param;
+	   memset(&user_param,0,sizeof(__uart_param));
+       user_param.baud_rate=9600;
+       user_param.io=  UART_TXPB0_RXPB1;
+       user_param.workmode=UART_WORKMODE_NORMAL;
+	   user_param.custom |= (BIT(14)|BIT(3));
+       status=uart_module_init(&uart1_handle,&user_param);
+	   uart_reg_isr_callback_fun(&uart1_handle,5,user_uart_isr_callback);
+	   if(status)
+	   {
+		   puts("uart_module_init err\n");
+	   }
+       if(!status)
+       {
+           status=uart_module_start(&uart1_handle);
+           if(!status)
+               user_uart_handle=&uart1_handle;
+       }
+
+    }
+}
+void user_uart_write(char a)
+{
+	if(user_uart_handle)
+	{
+		user_uart_handle->putbyte(user_uart_handle,a);
+	}
+	else
+	{
+		puts("user_uart_write err\n");
+	}
+}
 
 void fcc_uart_init()
 {

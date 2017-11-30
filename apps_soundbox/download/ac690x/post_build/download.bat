@@ -1,24 +1,24 @@
 @echo off
 
 @echo ********************************************************************************
-@echo 			SDK BR17 Apps Soundbox  ...			
+@echo 			SDK BR17 Apps Soundbox  ...
 @echo ********************************************************************************
 @echo %date%
 
 cd %~dp0
 
-if exist %1.bin del %1.bin 
-if exist %1.lst del %1.lst 
+if exist %1.bin del %1.bin
+if exist %1.lst del %1.lst
 
 REM  echo %1
 REM  echo %2
 REM  echo %3
 
-REM %2 -disassemble %1.or32 > %1.lst 
-%3 -O binary -j .text  %1.or32  %1.bin 
-%3 -O binary -j .data  %1.or32  data.bin 
-%3 -O binary -j .data1 %1.or32  data1.bin 
-%2 -section-headers  %1.or32 
+REM %2 -disassemble %1.or32 > %1.lst
+%3 -O binary -j .text  %1.or32  %1.bin
+%3 -O binary -j .data  %1.or32  data.bin
+%3 -O binary -j .data1 %1.or32  data1.bin
+%2 -section-headers  %1.or32
 
 copy %1.bin/b + data.bin/b + data1.bin/b sdram.app
 
@@ -37,14 +37,16 @@ cd ..
 cd tone_resource
 copy *.mp3 ..\
 cd ..
-isd_download.exe -tonorflash -dev br17 -boot 0x2000 -div6 -wait 300 -format cfg -f uboot.boot sdram.app bt_cfg.bin fast_run.bin power_off.mp3 bt.mp3 music.mp3 record.mp3 linein.mp3 radio.mp3 pc.mp3 wait.mp3 connect.mp3 disconnect.mp3 ring.mp3 0.mp3 1.mp3 2.mp3 3.mp3 4.mp3 5.mp3 6.mp3 7.mp3 8.mp3 9.mp3 F_ASCII_S.PIX F_GB2312.TAB F_GB2312_S.PIX ui_sty.sty menu.res
+isd_download.exe -tonorflash -dev br17 -boot 0x2000 -div6 -wait 300 -f uboot.boot sdram.app bt_cfg.bin fast_run.bin power_off.mp3 bt.mp3 linein.mp3 wait.mp3 connect.mp3 disconnect.mp3
 
-
+:: -format cfg
+::0.mp3 1.mp3 2.mp3 3.mp3 4.mp3 5.mp3 6.mp3 7.mp3 8.mp3 9.mp3 record.mp3 radio.mp3 pc.mp3 music.mp3 ring.mp3
+::F_ASCII_S.PIX F_GB2312.TAB F_GB2312_S.PIX ui_sty.sty menu.res
 
 ::-format cfg
 :: -read flash_r.bin 0-2M
 
-if exist *.mp3 del *.mp3 
+if exist *.mp3 del *.mp3
 if exist *.PIX del *.PIX
 if exist *.TAB del *.TAB
 if exist *.res del *.res

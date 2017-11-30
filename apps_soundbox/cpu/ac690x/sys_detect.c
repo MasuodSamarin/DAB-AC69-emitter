@@ -15,24 +15,24 @@
 u8 soft_poweroff_cnt = 0;
 u8 going_to_pwr_off = 0;
 u8 bd_work_mode;
-void pa_mute(void)                                                                                                
+void pa_mute(void)
 {
 #if PA_EN
      /* sys_det_puts("pa_mute\n"); */
-     PORTR_DIR(PORTR2,0);   
-     PORTR_OUT(PORTR2,1);   
-    /* JL_PORTA->DIR &= ~BIT(4); */ 
-     /* JL_PORTA->OUT |= BIT(4); */  
+     PORTR_DIR(PORTR2,0);
+     PORTR_OUT(PORTR2,1);
+    /* JL_PORTA->DIR &= ~BIT(4); */
+     /* JL_PORTA->OUT |= BIT(4); */
 #endif
 }
 void pa_umute(void)
-{	
+{
 #if PA_EN
      /* sys_det_puts("pa_umute\n"); */
      PORTR_DIR(PORTR2,0);
      PORTR_OUT(PORTR2,0);
-    /* JL_PORTA->DIR &= ~BIT(4); */ 
-     /* JL_PORTA->OUT &= ~BIT(4); */ 
+    /* JL_PORTA->DIR &= ~BIT(4); */
+     /* JL_PORTA->OUT &= ~BIT(4); */
 #endif
 }
 /*----------------------------------------------------------------------------*/
@@ -51,11 +51,14 @@ void sys_init(void)
 #if UART_UPDATA_EN
    uart_update_init();
 #endif
-	usb_2_io();
+//	usb_2_io();
 
 	key_init();
     //led_init();
 	aux_init_api(); //AUX init
+#ifdef PH_CHECK_ENABLE
+    ph_init_api();
+#endif // PH_CHECK_ENABLE
 
 #if BT_EMITTER_EN
 	emitter_init(BD_ROLE_HOST);
@@ -187,7 +190,7 @@ void battery_check(void *prt)
 
     val = get_battery_level();
     unit_cnt++;
-	
+
 
     if(val < 31)
         low_off_cnt++;
@@ -303,7 +306,7 @@ void clear_wdt(void)//Çå¿´ÃÅ¹·
 }
 
 /*----------------------------------------------------------------------------*/
-/**@brief  	sd data multiplex 
+/**@brief  	sd data multiplex
    @param   void
    @return  void
    @note
@@ -349,7 +352,7 @@ void sd_data_multiplex(void)
         JL_PORTA->DIR &= ~BIT(1);
         JL_PORTA->HD |= BIT(1);
         JL_PORTA->PU |= BIT(1);
-        JL_PORTA->DIE |= BIT(1); 
+        JL_PORTA->DIE |= BIT(1);
 
         //»Ö¸´ sd controller
         release_sd0_controller();
@@ -395,9 +398,9 @@ void sd_data_multiplex(void)
 #endif //SD_DADA_MULT
 
 /*----------------------------------------------------------------------------*/
-/**@brief  	pwm4_cfg 
+/**@brief  	pwm4_cfg
    @param	toggle:switch
-  			pre_div:0-2-4-8-16-32-64-128(div = 0~7) 
+  			pre_div:0-2-4-8-16-32-64-128(div = 0~7)
 			duty:duty/16(dety = 0~15)
    @return  void
    @note    pwm4 clk = lsb_clk/16div(default:48M/16 = 3M)
@@ -408,7 +411,7 @@ void pwm4_cfg(u8 toggle,u8 pre_div,u8 duty)
 	u8 pwm4_scaler;
 	u8 pwm4_duty;
 	if(toggle) {
-		pwm4_scaler = pre_div & 0x7;	
+		pwm4_scaler = pre_div & 0x7;
 		pwm4_duty = duty & 0xF;
     	JL_PWM4->CON = (pwm4_scaler << 4) | pwm4_duty;
 		JL_IOMAP->CON1 |= BIT(11)|BIT(12)|BIT(13);
